@@ -33,6 +33,43 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:159511932526:android:09aff6e703db01a2d0407f",
+        "android_client_info": {
+          "package_name": "com.example.flutter_ecommerce"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "159511932526-a0o20khsijrvdnnv9qb1boflnoklkmr7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.flutter_ecommerce",
+            "certificate_hash": "5d753f2c3dc57007ae073813131603072c719773"
+          }
+        },
+        {
+          "client_id": "159511932526-1oif2jpil49qfv2vggo0fuf4oc5iaumh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFs6GoC8TKKiA3mEUcWHAywCNXoH6GXac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "159511932526-1oif2jpil49qfv2vggo0fuf4oc5iaumh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

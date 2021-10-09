@@ -1,22 +1,62 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
-class UserModel {
-  static const ID = "uid";
-  static const NAME = "name";
-  static const EMAIL = "email";
+class UserModel extends StatelessWidget {
+  final String uid;
+  final String userName;
+  final String userMail;
+  final String createTime;
+  final String loginTime;
 
-  late String _id;
-  late String _name;
-  late String _email;
+  const UserModel(
+      {Key? key,
+      required this.uid,
+      required this.userName,
+      required this.userMail,
+      required this.createTime,
+      required this.loginTime})
+      : super(key: key);
 
-//  getters
-  String get name => _name;
-  String get email => _email;
-  String get id => _id;
+  factory UserModel.fromJson(Map<String, dynamic>? json) {
+    return UserModel(
+        uid: json!['uid'],
+        userName: json['userName'],
+        userMail: json['userMail'],
+        createTime: json['createTime'],
+        loginTime: json['loginTime']);
+  }
 
-  UserModel.fromSnapshot(DocumentSnapshot snapshot) {
-    _name = (snapshot.data() as Map)[NAME];
-    _email = (snapshot.data() as Map)[EMAIL];
-    _id = (snapshot.data() as Map)[ID];
+  Map<String, dynamic>? toJson() {
+    return {
+      'uid': uid,
+      'userName': userName,
+      'userMail': userMail,
+      'createTime': createTime,
+      'loginTime': loginTime
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Create a CollectionReference called users that references the firestore collection
+    CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+    Future addUser() {
+      return users
+          .add({
+            'uid': uid,
+            'userName': userName,
+            'userMail': userMail,
+            'createTime': createTime,
+            'loginTime': loginTime
+          })
+          .then((value) => print("user added"))
+          .catchError((e) => print(e.toString()));
+    }
+
+    return TextButton(
+      child: Text('Add User'),
+      onPressed: () => addUser(),
+    );
   }
 }
