@@ -122,7 +122,9 @@ class UserAccount extends StatelessWidget {
                               shape: CircleBorder(), color: blue),
                           child: IconButton(
                             icon: FaIcon(FontAwesomeIcons.facebookSquare),
-                            onPressed: () {},
+                            onPressed: () {
+                              authProvider.facebookSignIn();
+                            },
                             color: white,
                           ),
                         ),

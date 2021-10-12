@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_ecommerce/database/services/user_services.dart';
 import 'package:flutter_ecommerce/models/user.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
@@ -122,6 +123,87 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future facebookSignIn() async {
+    setLoading(true);
+    try {
+      _status = Status.Authenticating;
+      final LoginResult loginResult = await FacebookAuth.instance.login();
+      final OAuthCredential credential =
+          FacebookAuthProvider.credential(loginResult.accessToken!.token);
+      FirebaseAuth.instance.signInWithCredential(credential);
+
+      final UserCredential authResult =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = authResult.user;
+
+      setLoading(false);
+      Fluttertoast.showToast(msg: "Log in successful!");
+
+      // 若新使用者則新增資料庫，否則...
+      if (authResult.additionalUserInfo!.isNewUser) {
+        if (user != null) {
+          _userModel = UserModel(
+            uid: user.uid,
+            userName: user.displayName ?? "",
+            userMail: user.email ?? "",
+            createTime: getDateTime(),
+            loginTime: getDateTime(),
+          );
+          _userServices.createUser(_userModel!);
+        }
+      }
+    } catch (e) {
+      _status = Status.Unauthenticated;
+      setLoading(false);
+      print(e.toString());
+    }
+    notifyListeners();
+  }
+
+  Future phoneSignIn(String phoneNumber) async {
+    setLoading(true);
+    try {
+      _status = Status.Authenticating;
+      UserCredential? authResult;
+      FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: phoneNumber,
+          verificationCompleted: (PhoneAuthCredential credential) async {
+            authResult = await _firebaseAuth.signInWithCredential(credential);
+          },
+          verificationFailed: (FirebaseAuthException e) {
+            setMessage(errorMsg(e));
+          },
+          codeSent: (String verificationId, int? resendToken) {},
+          codeAutoRetrievalTimeout: (String verificationId) {});
+
+      if (authResult != null) {
+        final User? user = authResult!.user;
+      }
+
+      setLoading(false);
+      Fluttertoast.showToast(msg: "Log in successful!");
+
+      // 若新使用者則新增資料庫，否則...
+      if (authResult!.additionalUserInfo!.isNewUser) {
+        if (user != null) {
+          _userModel = UserModel(
+            uid: user!.uid,
+            userName: user!.displayName ?? "",
+            userMail: user!.email ?? "",
+            createTime: getDateTime(),
+            loginTime: getDateTime(),
+          );
+          _userServices.createUser(_userModel!);
+        }
+      }
+    } catch (e) {
+      _status = Status.Unauthenticated;
+      setLoading(false);
+      print(e.toString());
+    }
+    notifyListeners();
+  }
+
   Future signOut() async {
     _status = Status.Unauthenticated;
     await _firebaseAuth.signOut();
@@ -154,6 +236,12 @@ class AuthProvider with ChangeNotifier {
         break;
       case 'wrong-password':
         msg = '密碼輸入錯誤';
+        break;
+      case 'invalid-phone-number':
+        msg = '請輸入正確手機號碼';
+        break;
+      default:
+        msg = '發生錯誤';
         break;
     }
     return msg;

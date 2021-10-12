@@ -9,8 +9,6 @@ import 'package:flutter_ecommerce/pages/account/login.dart';
 import 'package:flutter_ecommerce/provider/app_provider.dart';
 import 'package:flutter_ecommerce/provider/auth_provider.dart';
 import 'package:flutter_ecommerce/pages/home/home_page.dart';
-import 'package:flutter_ecommerce/componets/loading.dart';
-import 'package:flutter_ecommerce/pages/wrapper.dart';
 import 'package:flutter_ecommerce/provider/product_provider.dart';
 import 'package:provider/provider.dart';
 
