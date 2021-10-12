@@ -13,13 +13,12 @@ enum Status { Uninitialized, Authenticated, Authenticating, Unauthenticated }
 class AuthProvider with ChangeNotifier {
   final FirebaseAuth _firebaseAuth;
   final UserServices _userServices = UserServices();
-  User? _user;
   UserModel? _userModel;
   bool _isLoading = false;
   String _errorMessage = '';
   Status _status = Status.Uninitialized;
 
-  User? get user => _user;
+  User? get user => _firebaseAuth.currentUser;
   UserModel? get userModel => _userModel;
   Status get status => _status;
   bool get isLoading => _isLoading;
@@ -37,34 +36,22 @@ class AuthProvider with ChangeNotifier {
       UserCredential authResult = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      _userServices.createUser(_userModel!);
-      // insertUser(authResult, userName);
+      await insertUser(authResult, userName);
 
       setLoading(false);
       Fluttertoast.showToast(msg: '註冊成功');
+      return true;
     } on SocketException {
       _status = Status.Unauthenticated;
       setLoading(false);
       setMessage("No internet, please connect to internet");
     } on FirebaseAuthException catch (e) {
-      var msg = '';
-      switch (e.code) {
-        case 'invalid-email':
-          msg = '無效的mail';
-          break;
-        case 'user-disabled':
-        case 'user-not-found':
-          msg = 'Mail尚未註冊';
-          break;
-        case 'wrong-password':
-          msg = '密碼輸入錯誤';
-          break;
-      }
       _status = Status.Unauthenticated;
       setLoading(false);
-      setMessage(msg);
+      setMessage(errorMsg(e));
     }
     notifyListeners();
+    return false;
   }
 
   Future mailSignIn(String email, String password) async {
@@ -77,18 +64,23 @@ class AuthProvider with ChangeNotifier {
       User? user = authResult.user;
       setLoading(false);
       Fluttertoast.showToast(msg: '登入成功');
-      _userServices.queryUser(user!.uid);
-      return user;
+      _userModel = await _userServices.queryUser(user!.uid);
+      return true;
     } on SocketException {
       _status = Status.Unauthenticated;
       setLoading(false);
       setMessage("No internet, please connect to internet");
+    } on FirebaseAuthException catch (e) {
+      _status = Status.Unauthenticated;
+      setLoading(false);
+      setMessage(errorMsg(e));
     } catch (e) {
       _status = Status.Unauthenticated;
       setLoading(false);
       setMessage(e.toString());
     }
     notifyListeners();
+    return false;
   }
 
   Future googleSignIn() async {
@@ -121,10 +113,7 @@ class AuthProvider with ChangeNotifier {
           );
           _userServices.createUser(_userModel!);
         }
-      } 
-      // else {
-      //   _userModel = await _userServices.queryUser(user!.uid);
-      // }
+      }
     } catch (e) {
       _status = Status.Unauthenticated;
       setLoading(false);
@@ -150,18 +139,39 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void insertUser(authResult, userName) async {
-    // User? user = authResult.user;
-    // user!.updateDisplayName(userName);
-    // await user.reload();
-    // user = _firebaseAuth.currentUser;
-    // _userServices.createUser(UserModel(
-    //   uid: user.uid,
-    //   userName: user.displayName,
-    //   userMail: user.email,
-    //   createTime: getDateTime(),
-    //   loginTime: getDateTime(),
-    // ));
+  String errorMsg(e) {
+    var msg = '';
+    switch (e.code) {
+      case 'invalid-email':
+        msg = '無效的mail';
+        break;
+      case 'email-already-in-use':
+        msg = 'email 已經註冊過';
+        break;
+      case 'user-disabled':
+      case 'user-not-found':
+        msg = 'Mail尚未註冊';
+        break;
+      case 'wrong-password':
+        msg = '密碼輸入錯誤';
+        break;
+    }
+    return msg;
+  }
+
+  Future insertUser(authResult, userName) async {
+    User? user = authResult.user;
+    user!.updateDisplayName(userName);
+    await user.reload();
+    user = _firebaseAuth.currentUser;
+    _userModel = UserModel(
+      uid: user!.uid,
+      userName: user.displayName ?? 'user',
+      userMail: user.email ?? 'user@com.tw',
+      createTime: getDateTime(),
+      loginTime: getDateTime(),
+    );
+    _userServices.createUser(_userModel!);
   }
 
   String getDateTime() {
@@ -170,7 +180,6 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future _onStateChanged(User? user) async {
-    _user = user;
     if (user == null) {
       _status = Status.Unauthenticated;
     } else {

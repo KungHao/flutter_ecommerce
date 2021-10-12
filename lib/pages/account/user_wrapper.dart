@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ecommerce/pages/account/account_detail.dart';
 import 'package:flutter_ecommerce/pages/user_account.dart';
@@ -23,11 +22,6 @@ class UserWrapper extends StatelessWidget {
         return AccountDetail();
       default:
         return UserAccount();
-    }
-    if (authProviver.userModel == null) {
-      return UserAccount();
-    } else {
-      return AccountDetail();
     }
   }
 }

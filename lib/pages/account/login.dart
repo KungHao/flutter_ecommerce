@@ -122,16 +122,16 @@ class _LoginState extends State<Login> {
                       child: MaterialButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            if (await authProvider.mailSignIn(
+                            if (!await authProvider.mailSignIn(
                                     _email.text.trim(),
-                                    _password.text.trim()) ==
-                                null) {
+                                    _password.text.trim())) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('請輸入正確帳號及密碼'),
+                                SnackBar(
+                                  content: Text(authProvider.errorMessage),
                                 ),
                               );
                             }
+                            Navigator.pop(context);
                           }
                         },
                         minWidth:

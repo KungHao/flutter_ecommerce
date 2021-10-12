@@ -197,8 +197,18 @@ class _SignUpState extends State<SignUp> {
                               if (_formKey.currentState!.validate()) {
                                 print('Email: ${_email.text}');
                                 print('Password: ${_password.text}');
-                                await authProvider.signUp(_name.text.trim(),
-                                    _email.text.trim(), _password.text.trim());
+                                if (await authProvider.signUp(
+                                    _name.text.trim(),
+                                    _email.text.trim(),
+                                    _password.text.trim())) {
+                                  Navigator.pop(context);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(authProvider.errorMessage),
+                                    ),
+                                  );
+                                }
                               }
                             },
                             child: authProvider.isLoading
